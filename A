@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ソートアルゴリズム学習</title>
+    <!-- Prism.js のCSS (例) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', 'Hiragino Sans', 'ヒラギノ角ゴシック', Meiryo, 'メイリオ', 'Yu Gothic', '游ゴシック', 'MS PGothic', 'ＭＳ Ｐゴシック', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .table-of-contents {
+            width: 15%; /* 目次項目増加のため少し幅を広げる */
+            background-color: #f4f4f4;
+            font-size: 10px;
+            padding: 10px 15px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            height: 100vh;
+            border-right: 1px solid #ccc;
+        }
+
+        .table-of-contents h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .table-of-contents ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .table-of-contents ul ul {
+            padding-left: 15px;
+        }
+         .table-of-contents ul ul ul { /* 3階層目のインデント */
+            padding-left: 15px;
+        }
+
+
+        .table-of-contents li a {
+            display: block;
+            padding: 5px 5px; /* パディング微調整 */
+            text-decoration: none;
+            color: #337ab7;
+            border-radius: 4px;
+            margin-bottom: 4px; /* マージン微調整 */
+            font-size: 10.5px; /* フォントサイズ微調整 */
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .table-of-contents li a:hover {
+            background-color: #e0e0e0;
+            color: #23527c;
+        }
+
+        .table-of-contents li a.active-toc-item {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            padding: 30px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            height: 100vh;
+            position: relative;
+        }
+
+        .content-page {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            right: 30px;
+            bottom: 30px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease-in-out, visibility 0s 0.4s;
+            overflow-y: auto;
+        }
+
+        .content-page:target {
+            opacity: 1;
+            visibility: visible;
+            z-index: 10;
+            transition: opacity 0.4s ease-in-out, visibility 0s 0s;
+        }
+
+        .content-page h2 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .content-page h3 {
+            color: #444;
+            margin-top: 20px;
+            border-bottom: 1px dotted #ccc;
+            padding-bottom: 5px;
+        }
+        .content-page p, .content-page ul, .content-page ol {
+            line-height: 1.7;
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .content-page ul, .content-page ol {
+            padding-left: 20px;
+        }
+        .content-page pre {
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 1em;
+            border-radius: 0.3em;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .content-page pre code {
+            font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+        }
+        .exercise-box {
+            border: 1px solid #007bff;
+            background-color: #e7f3ff;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .exercise-box h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        .internal-link-list li {
+            margin-bottom: 8px;
+        }
+
+
+        .navigation-buttons {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            z-index: 20;
+        }
+
+        .navigation-buttons button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .navigation-buttons button:hover {
+            background-color: #0056b3;
+        }
+        .navigation-buttons button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="table-of-contents">
+        <h3>目次</h3>
+        <ul>
+            <li><a href="#sort-intro"><strong>ソートとは</strong></a>
+                <ul>
+                    <li><a href="#sort-human">人間のソート（トランプ）</a></li>
+                    <li><a href="#sort-computer">パソコンのソート</a></li>
+                    <li><a href="#sort-human-vs-computer">人間とパソコンの比較</a></li>
+                </ul>
+            </li>
+            <li><a href="#selection-sort-learn"><strong>選択ソートとは</strong></a>
+                <ul>
+                    <li><a href="#selection-sort-steps">選択ソートの仕組み ステップ</a></li>
+                    <li><a href="#selection-sort-example">選択ソートの仕組み 3つ・5つ</a></li>
+                </ul>
+            </li>
+            <li><a href="#selection-sort-exercise"><strong>選択ソートの演習</strong></a>
+                 <ul>
+                    <li><a href="#selection-sort-ex1-5num">5個</a></li>
+                    <li><a href="#selection-sort-ex2-7num">7個</a></li>
+                    <li><a href="#selection-sort-ex3-10num">10個（数字）</a></li>
+                    <li><a href="#selection-sort-ex4-10abc">10個（ABC）</a></li>
+                    <li><a href="#selection-sort-ex5-10jp">10個（日本語）</a></li>
+                </ul>
+            </li>
+            <li><a href="#real-world-applications"><strong>実社会への応用</strong></a>
+                <ul>
+                    <li><a href="#app-search-system">検索システムへの応用</a>
+                        <ul><li><a href="#app-search-system-ex">演習</a></li></ul>
+                    </li>
+                    <li><a href="#app-phonebook-system">電話帳システムへの応用</a>
+                        <ul><li><a href="#app-phonebook-system-ex">演習</a></li></ul>
+                    </li>
+                </ul>
+            </li>
+            <li><a href="#insertion-sort-learn"><strong>挿入ソート</strong></a>
+                <ul>
+                    <li><a href="#insertion-sort-steps">挿入ソート ステップ</a></li>
+                    <li><a href="#insertion-sort-merits">メリット</a></li>
+                    <li><a href="#insertion-sort-example">挿入ソートの仕組み（5個）</a></li>
+                </ul>
+            </li>
+            <li><a href="#quick-sort-learn"><strong>クイックソート</strong></a>
+                <ul>
+                    <li><a href="#quick-sort-steps">クイックソート ステップ</a></li>
+                    <li><a href="#quick-sort-merits">メリット</a></li>
+                    <li><a href="#quick-sort-example">クイックソートの仕組み（5個）</a></li>
+                </ul>
+            </li>
+            <li><a href="#shell-sort-learn"><strong>シェルソート</strong></a> <!-- 目次案では「シェルソートの仕組み」だが、他と合わせる -->
+                <ul>
+                    <li><a href="#shell-sort-steps">シェルソート ステップ</a></li>
+                    <li><a href="#shell-sort-merits">メリット</a></li>
+                    <li><a href="#shell-sort-example">シェルソートの仕組み（5個）</a></li>
+                </ul>
+            </li>
+            <li><a href="#insertion-sort-exercise"><strong>挿入ソートの演習</strong></a>
+                <ul>
+                    <li><a href="#is-ex-5num">5個</a></li>
+                    <li><a href="#is-ex-7items">7個</a></li>
+                    <li><a href="#is-ex-10num">10個（数字）</a></li>
+                    <li><a href="#is-ex-10abc">10個（ABC）</a></li>
+                    <li><a href="#is-ex-10jp">10個（日本語）</a></li>
+                </ul>
+            </li>
+            <li><a href="#quick-sort-exercise"><strong>クイックソートの演習</strong></a>
+                <ul>
+                    <li><a href="#qs-ex-5num">5個</a></li>
+                    <li><a href="#qs-ex-7items">7個</a></li>
+                    <li><a href="#qs-ex-10num">10個（数字）</a></li>
+                    <li><a href="#qs-ex-10abc">10個（ABC）</a></li>
+                    <li><a href="#qs-ex-10jp">10個（日本語）</a></li>
+                </ul>
+            </li>
+            <li><a href="#shell-sort-exercise"><strong>シェルソートの演習</strong></a> <!-- 目次案では「シェルソートの仕組み」だが、演習と解釈 -->
+                <ul>
+                    <li><a href="#ss-ex-5num">5個</a></li>
+                    <li><a href="#ss-ex-7items">7個</a></li>
+                    <li><a href="#ss-ex-10num">10個（数字）</a></li>
+                    <li><a href="#ss-ex-10abc">10個（ABC）</a></li>
+                    <li><a href="#ss-ex-10jp">10個（日本語）</a></li>
+                </ul>
+            </li>
+            <li><a href="#summary"><strong>まとめ</strong></a>
+                <ul>
+                    <li><a href="#summary-comparison">それぞれのソートについて・社会の仕組みへの応用</a></li>
+                </ul>
+            </li>
+            <li><a href="#finally-author"><strong>最後に</strong></a></li>
+        </ul>
+    </nav>
+
+    <main class="content-area">
+        <!-- ソートとは -->
+        <section id="sort-intro" class="content-page">
+            <h2>ソートとは</h2>
+            <p>ソート（Sorting）とは、複数のデータや項目を、ある特定の基準に従って順番に並べ替える操作のことです。例えば、数値の小さい順（昇順）や大きい順（降順）、五十音順、アルファベット順など、様々な基準があります。</p>
+            <p><strong>なぜソートが必要なのでしょうか？</strong></p>
+            <ul>
+                <li><strong>検索の効率化:</strong> データが整列されていると、目的の情報を素早く見つけることができます。例えば、辞書や電話帳がソートされているのはこのためです。</li>
+                <li><strong>データの可読性向上:</strong> 整列されたデータは人間にとって理解しやすく、傾向やパターンを把握しやすくなります。</li>
+                <li><strong>データ分析の基礎:</strong> 多くのデータ分析手法では、事前にデータがソートされていることが前提となる場合があります。</li>
+                <li><strong>他のアルゴリズムの準備:</strong> 特定のアルゴリズム（例：二分探索）は、ソート済みのデータに対してのみ効率的に動作します。</li>
+            </ul>
+            <p>日常生活でも、書類を日付順に整理したり、本棚の本を著者名順に並べたりするなど、無意識のうちにソートを行っていることがあります。</p>
+        </section>
+        <section id="sort-human" class="content-page"><h2>人間のソート（トランプ）</h2> <p>人間がソートを行う身近な例として、トランプの手札を整理する場面を考えてみましょう。</p><p>配られたばかりのトランプのカードは、通常バラバラの順番になっています。これをゲームで使いやすくするために、多くの人は数字の小さい順（または大きい順）や、スート（マーク）ごとにまとめたりします。</p><p><strong>一般的な人間のソート戦略（例：数字の小さい順に並べる場合）:</strong></p><ul><li><strong>戦略1: 挿入していく方法（挿入ソートに近い考え方）</strong><ol><li>まず1枚のカードを手に取ります。</li><li>次に新しいカードを1枚取り、既に持っているカードの適切な位置（正しい順番になる場所）に挿入します。</li><li>これを全てのカードが手札に入るまで繰り返します。</li></ol></li><li><strong>戦略2: 最小のものを探して先頭に持ってくる方法（選択ソートに近い考え方）</strong><ol><li>手札全体の中から最も小さい数字のカードを探します。</li><li>見つけたら、それを手札の左端（先頭）に置きます。</li><li>次に、残りのカードの中から最も小さい数字のカードを探し、先頭に置いたカードの隣に置きます。</li><li>これを全てのカードが並び終わるまで繰り返します。</li></ol></li></ul><p>人間は直感的に、あるいは経験に基づいて、これらの戦略を柔軟に組み合わせて効率よくソートを行うことができます。カードの枚数が少なければ、全体を一度に見渡して一気に並べ替えることも可能です。</p></section>
+        <section id="sort-computer" class="content-page"><h2>パソコンのソート</h2> <p>コンピュータ（パソコン）も、様々な場面でソート処理を行っています。例えば、ファイルエクスプローラーでファイルを名前順や更新日時順に並べ替えたり、表計算ソフトで特定の列のデータを昇順・降順にソートしたりする機能は、コンピュータ内部でソートアルゴリズムが実行された結果です。</p><p>コンピュータがソートを行う際には、人間のように直感的に「全体を見て判断する」ことはできません。代わりに、あらかじめ定義された手順、すなわち**ソートアルゴリズム**に従って、データを比較し、必要に応じて入れ替えを行いながら順番に並べていきます。</p><p><strong>代表的なソートアルゴリズムには、以下のようなものがあります。</strong></p><ul><li>選択ソート (Selection Sort)</li><li>バブルソート (Bubble Sort)</li><li>挿入ソート (Insertion Sort)</li><li>マージソート (Merge Sort)</li><li>クイックソート (Quick Sort)</li><li>ヒープソート (Heap Sort)</li><li>シェルソート (Shell Sort)</li></ul><p>これらのアルゴリズムは、それぞれ異なる特性（処理速度、メモリ使用量、安定性など）を持っており、データの量や状態、要求される性能に応じて使い分けられます。</p><p>コンピュータは非常に高速に計算処理を行えるため、大量のデータであっても、効率的なアルゴリズムを用いれば短時間でソートを完了することができます。</p></section>
+        <section id="sort-human-vs-computer" class="content-page"><h2>人間とパソコンのソート比較</h2> <p>人間が行うソートと、コンピュータが行うソートには、いくつかの違いと共通点があります。</p><table border="1" style="width:100%; border-collapse: collapse;"><thead><tr><th style="padding: 8px; background-color: #f0f0f0;">比較項目</th><th style="padding: 8px; background-color: #f0f0f0;">人間のソート</th><th style="padding: 8px; background-color: #f0f0f0;">コンピュータのソート</th></tr></thead><tbody><tr><td style="padding: 8px;"><strong>処理の基本</strong></td><td style="padding: 8px;">直感的、視覚的。全体を把握しやすい。曖昧な判断も可能。</td><td style="padding: 8px;">論理的、逐次的。厳密なアルゴリズムに基づく。</td></tr><tr><td style="padding: 8px;"><strong>速度</strong></td><td style="padding: 8px;">データ量が少ない場合は速い。多いと非常に遅くなる。疲労する。</td><td style="padding: 8px;">データ量が多くても高速に処理可能。疲労しない。</td></tr><tr><td style="padding: 8px;"><strong>正確性</strong></td><td style="padding: 8px;">ミスをしやすい。集中力に左右される。</td><td style="padding: 8px;">アルゴリズムが正しければ常に正確。</td></tr><tr><td style="padding: 8px;"><strong>扱えるデータ量</strong></td><td style="padding: 8px;">限られる。数十～数百程度が限界。</td><td style="padding: 8px;">メモリが許す限り、非常に大量のデータを扱える。</td></tr><tr><td style="padding: 8px;"><strong>柔軟性</strong></td><td style="padding: 8px;">状況に応じて戦略を変えられる。複数の基準を同時に考慮しやすい。</td><td style="padding: 8px;">基本的にプログラムされたアルゴリズム通りに動作。複雑な基準は事前に定義が必要。</td></tr><tr><td style="padding: 8px;"><strong>学習能力</strong></td><td style="padding: 8px;">経験からより効率的な方法を学習できる。</td><td style="padding: 8px;">（標準的なソートでは）自己学習はしない。機械学習の文脈ではあり得る。</td></tr></tbody></table><p><strong>共通点：</strong></p><ul><li>目的は同じ：データを特定の順序に並べ替えること。</li><li>基本的な操作：要素間の比較と、必要に応じた要素の交換（または移動）が基本となることが多い。</li></ul><p>人間は少量のデータを扱う場合や、複雑な判断が必要な場合に強みを発揮します。一方、コンピュータは大量のデータを高速かつ正確に処理することに長けています。現代社会では、コンピュータによるソートが不可欠な技術となっています。</p></section>
+
+        <!-- 選択ソートとは -->
+        <section id="selection-sort-learn" class="content-page">
+            <h2>選択ソートとは</h2>
+            <p>選択ソート (Selection Sort) は、単純なソートアルゴリズムの一つです。アルゴリズムの動作は直感的で理解しやすいのが特徴です。</p>
+            <p><strong>基本的な考え方:</strong></p>
+            <ol>
+                <li>整列されていない部分（最初は配列全体）の中から、最小値（または最大値）を持つ要素を探し出します。</li>
+                <li>見つけ出した最小値（または最大値）の要素を、整列されていない部分の先頭の要素と交換します。</li>
+                <li>これにより、先頭の要素が確定し、整列済み部分が一つ増えます。</li>
+                <li>整列されていない部分がなくなるまで、上記1～3の操作を繰り返します。</li>
+            </ol>
+            <p>以下に選択ソートの動作を視覚的に確認できるツールを示します。「実行開始」ボタンを押すと、指定された配列のソートが開始されます。速度スライダーでアニメーションの速度を調整できます。</p>
+
+            <!-- ここから視覚化ツールを埋め込む -->
+            <style>
+              /* body スタイルは削除、代わりに #app-container に一部のスタイルを適用 */
+              #app-container {
+                display: flex;
+                gap: 20px;
+                width: 100%;
+                max-width: 900px;
+                margin: 20px auto; /* 中央揃えと上下マージン */
+                padding: 0; 
+                box-sizing: border-box;
+                background-color: #fff;
+                /* font-family は埋め込み先のものを継承 */
+              }
+              #left-panel {
+                flex: 3;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+              }
+              #right-panel {
+                flex: 1;
+                min-width: 180px;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                padding-top: 5px;
+              }
+
+              .container { /* #sort-container */
+                display: flex;
+                gap: 5px;
+                padding: 10px;
+                border: 1px solid #e0e0e0;
+                min-height: 350px;
+                align-items: flex-end;
+                justify-content: center; /* ★ アニメーション要素を中央揃え */
+                position: relative;
+                background-color: #fff;
+                border-radius: 4px;
+                /* overflow-x: auto; */ /* バーの数が多い場合は有効化を検討 */
+              }
+              .item {
+                width: 45px;
+                text-align: center;
+                border: 1px solid #d0d0d0;
+                background-color: #f0f0f0;
+                transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, height 0.2s ease;
+                font-weight: bold;
+                font-size: 1.1em;
+                color: #333;
+                box-sizing: border-box;
+                position: relative;
+                --value: 1;
+                height: calc(30px + (var(--value) * 30px));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              }
+              .item.comparing { background-color: #fffacd; border-color: #f0e68c; }
+              .item.min { background-color: #add8e6; border-color: #87ceeb; }
+              .item.swapping { background-color: #ffcccb; border-color: #ffb6c1; transform: translateY(-10px) scale(1.1); }
+              .item.sorted { background-color: #90ee90; border-color: #3cb371; }
+
+              #controls {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              }
+              #controls button {
+                padding: 8px 12px;
+                cursor: pointer;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background-color: #f0f0f0;
+                color: #333;
+                font-size: 0.9em;
+                text-align: left;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              }
+              #controls button:hover:not(:disabled) {
+                background-color: #e0e0e0;
+              }
+              #controls button:disabled {
+                cursor: not-allowed;
+                opacity: 0.6;
+              }
+              #speed-control {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+              }
+              #speed-control label {
+                font-size: 0.9em;
+                color: #333;
+              }
+              #speed-value-container {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+              }
+               #speed-value-container input[type="range"] {
+                flex-grow: 1;
+              }
+              #speed-value {
+                font-size: 0.9em;
+                font-weight: bold;
+                min-width: 35px;
+                text-align: right;
+                color: #333;
+              }
+              #status {
+                font-size: 0.9em;
+                color: #333;
+                min-height: 1.5em;
+                padding-top: 5px;
+                line-height: 1.4;
+              }
+            </style>
+
+            <div id="app-container">
+              <div id="left-panel">
+                <div id="sort-container" class="container">
+                  <!-- JavaScriptで要素を動的に生成 -->
+                </div>
+                <div id="status">「実行開始」ボタンを押してソートを開始してください。</div>
+              </div>
+
+              <div id="right-panel">
+                <div id="controls">
+                  <button id="start-sort">実行開始 <span>▶▶</span></button>
+                  <button id="reset">リセット <span>↺</span></button>
+                </div>
+                <div id="speed-control">
+                  <label for="speed-slider">速度:</label>
+                  <div id="speed-value-container">
+                      <input type="range" id="speed-slider" min="1" max="11" value="6">
+                      <span id="speed-value"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <script>
+              (function() { // 即時関数でスコープを限定
+                let currentArray = [];
+                const container = document.getElementById('sort-container');
+                const statusDiv = document.getElementById('status');
+                const startSortButton = document.getElementById('start-sort');
+                const resetButton = document.getElementById('reset');
+                const speedSlider = document.getElementById('speed-slider');
+                const speedValueSpan = document.getElementById('speed-value');
+
+                let sortGenerator = null;
+                let isAutoRunning = false;
+                let autoRunTimeoutId = null;
+                let currentSpeedMs = 500;
+
+                function calculateSpeedMs(sliderValue) {
+                    const maxMs = 1500;
+                    const minMs = 100;
+                    const range = parseFloat(speedSlider.max) - parseFloat(speedSlider.min);
+                    const normalizedValue = (parseFloat(speedSlider.max) - parseFloat(sliderValue)) / range;
+                    return Math.round(minMs + (maxMs - minMs) * normalizedValue);
+                }
+
+                function shuffleArray(array) {
+                  for (let i = array.length - 1; i > 0; i--) {
+                      const j = Math.floor(Math.random() * (i + 1));
+                      [array[i], array[j]] = [array[j], array[i]];
+                  }
+                }
+
+                function sleep(ms) {
+                  return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+                function renderArray(arr, highlights = {}) {
+                  if (container.children.length !== arr.length || !container.hasChildNodes() ||
+                      Array.from(container.children).some((child, index) => child.id !== `item-${index}`)) {
+                    container.innerHTML = '';
+                    arr.forEach((value, index) => {
+                      const item = document.createElement('div');
+                      item.className = 'item';
+                      item.id = `item-${index}`; // IDにプレフィックスを追加して衝突を避ける (もし必要なら)
+                      container.appendChild(item);
+                    });
+                  }
+
+                  arr.forEach((value, index) => {
+                    const item = document.getElementById(`item-${index}`); // IDにプレフィックスを追加 (もし必要なら)
+                    if (!item) {
+                        console.error(`Element item-${index} not found!`);
+                        return;
+                    }
+                    item.textContent = value;
+                    item.style.setProperty('--value', value);
+
+                    item.classList.remove('comparing', 'min', 'swapping', 'sorted');
+
+                    if (highlights.comparing?.includes(index)) item.classList.add('comparing');
+                    if (highlights.min === index) item.classList.add('min');
+                    if (highlights.swapping?.includes(index)) item.classList.add('swapping');
+                    if (highlights.sortedBoundary !== undefined && index < highlights.sortedBoundary) {
+                        item.classList.add('sorted');
+                    } else if (highlights.sortedBoundary === arr.length && index >= 0) {
+                        item.classList.add('sorted');
+                    }
+                  });
+                }
+
+                function* selectionSortSteps(arr) {
+                  let n = arr.length;
+                  let localArray = [...arr];
+
+                  for (let i = 0; i < n - 1; i++) {
+                    let minIndex = i;
+                    yield { step: 'find_min_start', i: i, minIndex: minIndex, array: [...localArray], highlights: { min: minIndex, sortedBoundary: i } };
+
+                    for (let j = i + 1; j < n; j++) {
+                      yield { step: 'comparing', i: i, j: j, minIndex: minIndex, array: [...localArray], highlights: { comparing: [minIndex, j], min: minIndex, sortedBoundary: i } };
+
+                      if (localArray[j] < localArray[minIndex]) {
+                        minIndex = j;
+                        yield { step: 'new_min_found', i: i, minIndex: minIndex, array: [...localArray], highlights: { min: minIndex, comparing: [minIndex, j], sortedBoundary: i } };
+                      } else {
+                        yield { step: 'compare_end', i: i, j:j, minIndex: minIndex, array: [...localArray], highlights: { min: minIndex, comparing: [minIndex, j], sortedBoundary: i } };
+                      }
+                    }
+
+                    if (minIndex !== i) {
+                      yield { step: 'before_swap', i: i, minIndex: minIndex, array: [...localArray], highlights: { swapping: [i, minIndex], min: minIndex, sortedBoundary: i } };
+                      [localArray[i], localArray[minIndex]] = [localArray[minIndex], localArray[i]];
+                      yield { step: 'after_swap', i: i, swappedFrom: minIndex, array: [...localArray], highlights: { sortedBoundary: i + 1 } };
+                    } else {
+                      yield { step: 'no_swap', i: i, array: [...localArray], highlights: { sortedBoundary: i + 1 } };
+                    }
+                  }
+                  yield { step: 'done', array: [...localArray], highlights: { sortedBoundary: n } };
+                }
+
+                async function executeNextStep() {
+                  if (!sortGenerator) return true;
+
+                  const result = sortGenerator.next();
+                  let isDone = false;
+
+                  if (!result.done) {
+                    const state = result.value;
+                    currentArray = [...state.array];
+
+                    let statusMessage = '';
+                    switch(state.step) {
+                      case 'find_min_start': statusMessage = `パス ${state.i + 1}: 最小値探索中 (候補: ${currentArray[state.minIndex]})`; break;
+                      case 'comparing': statusMessage = `パス ${state.i + 1}: ${currentArray[state.j]} と ${currentArray[state.minIndex]} を比較`; break;
+                      case 'new_min_found': statusMessage = `パス ${state.i + 1}: 新しい最小値 ${currentArray[state.minIndex]}`; break;
+                      case 'compare_end': statusMessage = `パス ${state.i + 1}: 比較終了`; break;
+                      case 'before_swap': statusMessage = `パス ${state.i + 1}: ${currentArray[state.i]} と ${currentArray[state.minIndex]} を交換`; break;
+                      case 'after_swap':
+                          statusMessage = `パス ${state.i + 1}: 交換完了`;
+                          renderArray(currentArray, state.highlights);
+                          await sleep(Math.max(50, Math.floor(currentSpeedMs / 3)));
+                          renderArray(currentArray, { sortedBoundary: state.highlights.sortedBoundary });
+                          break;
+                      case 'no_swap': statusMessage = `パス ${state.i + 1}: 交換なし`; break;
+                      default: statusMessage = "処理中...";
+                    }
+                    statusDiv.innerHTML = statusMessage.replace(/\n/g, '<br>');
+
+                    if(state.step !== 'after_swap'){
+                       renderArray(currentArray, state.highlights);
+                    }
+                    await sleep(Math.max(50, Math.floor(currentSpeedMs * 2 / 3)));
+
+                  } else {
+                    isDone = true;
+                    isAutoRunning = false;
+                    clearTimeout(autoRunTimeoutId);
+
+                    const finalState = result.value; // This might be undefined if generator finishes without a final yield
+                    if (finalState && finalState.array) { // Check if finalState and finalState.array exist
+                        currentArray = [...finalState.array];
+                        statusDiv.innerHTML = `ソート完了: [${currentArray.join(', ')}]`;
+                        renderArray(currentArray, finalState.highlights);
+                    } else {
+                         statusDiv.innerHTML = `ソート完了`;
+                         // Render with all items sorted if finalState is not as expected
+                         renderArray(currentArray, {sortedBoundary: currentArray.length});
+                    }
+                    console.log("Sorting done.");
+
+                    startSortButton.innerHTML = '実行開始 <span>▶▶</span>';
+                    startSortButton.disabled = true;
+                    resetButton.disabled = false;
+                    speedSlider.disabled = false;
+                  }
+                  return isDone;
+                }
+
+                function updateSpeedDisplay() {
+                    const sliderVal = parseFloat(speedSlider.value);
+                    let displayMultiplier = 0.2 + ((sliderVal - 1) / (speedSlider.max - speedSlider.min)) * 2.0;
+                    speedValueSpan.textContent = `x${displayMultiplier.toFixed(1)}`;
+                    currentSpeedMs = calculateSpeedMs(sliderVal);
+                }
+
+                function initialize() {
+                  isAutoRunning = false;
+                  clearTimeout(autoRunTimeoutId);
+
+                  // ▼▼▼ 配列の初期値をここで指定 ▼▼▼
+                  // 例1:
+                  const userDefinedArray = [5, 2, 8, 1, 9, 4, 7, 3, 6, 10];
+                  // 例2: const userDefinedArray = [3, 1, 4, 1, 5, 9, 2, 6];
+                  // 例3: const userDefinedArray = [7, 2, 9, 1, 5];
+                  // 好きな配列を以下の行で定義してください。
+                  // const userDefinedArray = [8, 3, 5, 1, 6, 2, 7, 4]; // ここを編集して初期配列を変更
+                  // ▲▲▲ ▲▲▲ ▲▲▲
+
+                  currentArray = [...userDefinedArray]; 
+
+                  // document.title は埋め込み先のものを使用するため不要
+                  // document.title = `選択ソートの視覚化`;
+
+                  renderArray(currentArray);
+                  sortGenerator = selectionSortSteps([...currentArray]);
+                  statusDiv.innerHTML = '初期状態。「実行開始」を押してください。';
+
+                  startSortButton.innerHTML = '実行開始 <span>▶▶</span>';
+                  startSortButton.disabled = false;
+                  resetButton.disabled = false;
+                  speedSlider.disabled = false;
+                  updateSpeedDisplay();
+                }
+
+                // イベントリスナーは、DOM要素が確実に存在してから設定する
+                // このスクリプト自体がDOMの末尾近くに配置されるか、
+                // DOMContentLoaded内で実行されれば問題ない。
+                // 今回はスクリプトを要素の後に配置するので、直接実行してOK。
+
+                speedSlider.addEventListener('input', updateSpeedDisplay);
+
+                startSortButton.addEventListener('click', () => {
+                  if (!sortGenerator || (sortGenerator.next().done && !isAutoRunning) ) { // ジェネレータが終了していたらリセット
+                      sortGenerator = selectionSortSteps([...currentArray]);
+                  }
+
+                  isAutoRunning = !isAutoRunning;
+
+                  if (isAutoRunning) {
+                    startSortButton.innerHTML = '停止 <span>⏹</span>';
+                    startSortButton.disabled = false;
+                    resetButton.disabled = true;
+                    speedSlider.disabled = true;
+
+                    statusDiv.innerHTML = 'ソート処理を開始します...';
+                    runAutoStep();
+                  } else {
+                    clearTimeout(autoRunTimeoutId);
+                    startSortButton.innerHTML = '実行開始 <span>▶▶</span>';
+                    resetButton.disabled = false;
+                    speedSlider.disabled = false;
+                    statusDiv.innerHTML = 'ソート処理が停止されました。';
+                    // 停止した場合、ジェネレータの状態を保持し、次回再開できるようにする
+                    // もし最初からやり直したい場合は、以下のコメントを解除
+                    // sortGenerator = selectionSortSteps([...currentArray]);
+                  }
+                });
+
+                async function runAutoStep() {
+                    if (!isAutoRunning || !sortGenerator) return;
+
+                    const isDone = await executeNextStep();
+
+                    if (!isDone && isAutoRunning) {
+                        autoRunTimeoutId = setTimeout(runAutoStep, currentSpeedMs);
+                    } else if (isDone) {
+                        console.log("Auto run finished by completion.");
+                    } else if (!isAutoRunning) {
+                        console.log("Auto run stopped by user.");
+                    }
+                }
+
+                resetButton.addEventListener('click', () => {
+                    isAutoRunning = false;
+                    clearTimeout(autoRunTimeoutId);
+                    initialize();
+                });
+
+                initialize();
+              })(); // 即時関数の実行
+            </script>
+            <!-- ここまで視覚化ツール -->
+        </section>
+        <section id="selection-sort-steps" class="content-page"><h2>選択ソートの仕組み ステップ</h2> <p>選択ソートが昇順（小さい順）にデータを並べ替える具体的なステップを見ていきましょう。</p><p>仮に、以下のような配列 `[5, 1, 4, 2, 8]` があるとします。</p><h3>ステップ 1: 最初のパス (未整列部分: 全体)</h3><ol><li>未整列部分 `[5, 1, 4, 2, 8]` (インデックス 0 から 4) の中から最小値を探します。<ul><li>5 と 1 を比較 → 1 が小さい</li><li>1 と 4 を比較 → 1 が小さい</li><li>1 と 2 を比較 → 1 が小さい</li><li>1 と 8 を比較 → 1 が小さい</li><li>最小値は <strong>1</strong> (インデックス 1 にある) です。</li></ul></li><li>最小値 <strong>1</strong> を未整列部分の先頭要素 <strong>5</strong> (インデックス 0) と交換します。</li><li>配列の状態: `[1, 5, 4, 2, 8]`</li><li>インデックス 0 の要素 <strong>1</strong> は確定し、整列済みとなります。</li></ol><p>整列済み: `[1]` | 未整列: `[5, 4, 2, 8]`</p><h3>ステップ 2: 2番目のパス (未整列部分: インデックス 1 から)</h3><ol><li>未整列部分 `[5, 4, 2, 8]` (インデックス 1 から 4) の中から最小値を探します。<ul><li>5 と 4 を比較 → 4 が小さい</li><li>4 と 2 を比較 → 2 が小さい</li><li>2 と 8 を比較 → 2 が小さい</li><li>最小値は <strong>2</strong> (インデックス 3 にある) です。</li></ul></li><li>最小値 <strong>2</strong> を未整列部分の先頭要素 <strong>5</strong> (インデックス 1) と交換します。</li><li>配列の状態: `[1, 2, 4, 5, 8]`</li><li>インデックス 1 の要素 <strong>2</strong> は確定し、整列済みとなります。</li></ol><p>整列済み: `[1, 2]` | 未整列: `[4, 5, 8]`</p><h3>ステップ 3: 3番目のパス (未整列部分: インデックス 2 から)</h3><ol><li>未整列部分 `[4, 5, 8]` (インデックス 2 から 4) の中から最小値を探します。<ul><li>4 と 5 を比較 → 4 が小さい</li><li>4 と 8 を比較 → 4 が小さい</li><li>最小値は <strong>4</strong> (インデックス 2 にある) です。</li></ul></li><li>最小値 <strong>4</strong> は既に未整列部分の先頭にあるため、交換は不要です（自分自身との交換とみなせます）。</li><li>配列の状態: `[1, 2, 4, 5, 8]`</li><li>インデックス 2 の要素 <strong>4</strong> は確定し、整列済みとなります。</li></ol><p>整列済み: `[1, 2, 4]` | 未整列: `[5, 8]`</p><h3>ステップ 4: 4番目のパス (未整列部分: インデックス 3 から)</h3><ol><li>未整列部分 `[5, 8]` (インデックス 3 から 4) の中から最小値を探します。<ul><li>5 と 8 を比較 → 5 が小さい</li><li>最小値は <strong>5</strong> (インデックス 3 にある) です。</li></ul></li><li>最小値 <strong>5</strong> は既に未整列部分の先頭にあるため、交換は不要です。</li><li>配列の状態: `[1, 2, 4, 5, 8]`</li><li>インデックス 3 の要素 <strong>5</strong> は確定し、整列済みとなります。</li></ol><p>整列済み: `[1, 2, 4, 5]` | 未整列: `[8]`</p><h3>ステップ 5: 最後の要素</h3><p>最後の要素 (この場合は `8`) は、残りが1つになった時点で自動的に正しい位置に配置されているため、比較や交換の必要はありません。</p><p><strong>最終結果: `[1, 2, 4, 5, 8]`</strong></p><p>このように、選択ソートはN個の要素に対して N-1 回のパス（走査）を行い、各パスで最小値（または最大値）を見つけて適切な位置に配置します。</p></section>
+        <section id="selection-sort-example" class="content-page"><h2>選択ソートの仕組み 3つ・5つ</h2> <p>選択ソートの動作を、より少ない要素数で具体的に見てみましょう。</p><h3>例1: 3つの要素 `[7, 2, 9]` を昇順にソート</h3><p><strong>初期状態:</strong> `[7, 2, 9]`</p><p><strong>パス 1:</strong></p><ul><li>未整列部分: `[7, 2, 9]`</li><li>最小値を探す: 2 (インデックス 1)</li><li>先頭要素 7 (インデックス 0) と 2 を交換</li><li>配列: `[2, 7, 9]`</li><li>整列済み: `[2]` | 未整列: `[7, 9]`</li></ul><p><strong>パス 2:</strong></p><ul><li>未整列部分: `[7, 9]` (先頭はインデックス 1 の 7)</li><li>最小値を探す: 7 (インデックス 1)</li><li>先頭要素 7 (インデックス 1) と 7 を交換 (実質変化なし)</li><li>配列: `[2, 7, 9]`</li><li>整列済み: `[2, 7]` | 未整列: `[9]`</li></ul><p>最後の要素 `9` は自動的にソート済みとなります。</p><p><strong>最終結果: `[2, 7, 9]`</strong></p><hr style="margin: 20px 0;"><h3>例2: 5つの要素 `[64, 25, 12, 22, 11]` を昇順にソート</h3><p><strong>初期状態:</strong> `[64, 25, 12, 22, 11]`</p><p><strong>パス 1:</strong></p><ul><li>未整列: `[64, 25, 12, 22, 11]`</li><li>最小値: 11 (インデックス 4)</li><li>交換: 64 (インデックス 0) と 11 を交換</li><li>配列: `[11, 25, 12, 22, 64]`</li><li>整列済み: `[11]` | 未整列: `[25, 12, 22, 64]`</li></ul><p><strong>パス 2:</strong></p><ul><li>未整列: `[25, 12, 22, 64]` (先頭はインデックス 1 の 25)</li><li>最小値: 12 (インデックス 2)</li><li>交換: 25 (インデックス 1) と 12 を交換</li><li>配列: `[11, 12, 25, 22, 64]`</li><li>整列済み: `[11, 12]` | 未整列: `[25, 22, 64]`</li></ul><p><strong>パス 3:</strong></p><ul><li>未整列: `[25, 22, 64]` (先頭はインデックス 2 の 25)</li><li>最小値: 22 (インデックス 3)</li><li>交換: 25 (インデックス 2) と 22 を交換</li><li>配列: `[11, 12, 22, 25, 64]`</li><li>整列済み: `[11, 12, 22]` | 未整列: `[25, 64]`</li></ul><p><strong>パス 4:</strong></p><ul><li>未整列: `[25, 64]` (先頭はインデックス 3 の 25)</li><li>最小値: 25 (インデックス 3)</li><li>交換: 25 (インデックス 3) と 25 を交換 (実質変化なし)</li><li>配列: `[11, 12, 22, 25, 64]`</li><li>整列済み: `[11, 12, 22, 25]` | 未整列: `[64]`</li></ul><p>最後の要素 `64` は自動的にソート済みとなります。</p><p><strong>最終結果: `[11, 12, 22, 25, 64]`</strong></p><p>このように、要素数が少なくても多くても、選択ソートは同じロジックで動作します。</p></section>
+
+        <!-- 選択ソートの演習 -->
+        <section id="selection-sort-exercise" class="content-page">
+            <h2>選択ソートの演習</h2>
+            <p>ここでは、実際に選択ソートを使ってデータを並べ替える練習をしましょう。各問題について、昇順（小さいものから大きいものへ、または辞書順）に並べ替える過程と最終結果を示してください。</p>
+            <p>過程は、各パスの開始時の配列、見つかった最小値、交換後の配列を記述すると分かりやすいです。</p>
+        </section>
+        <section id="selection-sort-ex1-5num" class="content-page">
+            <h2>選択ソート 演習: 5個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>以下の数字の列を、選択ソートを使って昇順に並べ替えてください。</p>
+                <pre><code class="language-text">[50, 10, 40, 20, 30]</code></pre>
+                <p><strong>解答形式例（パス1）:</strong></p>
+                <ul>
+                    <li>初期: `[50, 10, 40, 20, 30]`</li>
+                    <li>最小値: 10</li>
+                    <li>交換後: `[10, 50, 40, 20, 30]`</li>
+                </ul>
+            </div>
+        </section>
+        <section id="selection-sort-ex2-7num" class="content-page">
+            <h2>選択ソート 演習: 7個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>以下の数字の列を、選択ソートを使って昇順に並べ替えてください。</p>
+                <pre><code class="language-text">[7, 1, 9, 3, 5, 2, 8]</code></pre>
+            </div>
+        </section>
+        <section id="selection-sort-ex3-10num" class="content-page">
+            <h2>選択ソート 演習: 10個（数字）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>以下の数字の列を、選択ソートを使って昇順に並べ替えてください。</p>
+                <pre><code class="language-text">[15, 8, 22, 5, 12, 18, 3, 25, 10, 20]</code></pre>
+            </div>
+        </section>
+        <section id="selection-sort-ex4-10abc" class="content-page">
+            <h2>選択ソート 演習: 10個（ABC）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>以下のアルファベットの列を、選択ソートを使って辞書順（A→Z）に並べ替えてください。</p>
+                <pre><code class="language-text">['P', 'L', 'A', 'Y', 'F', 'U', 'L', 'C', 'O', 'D']</code></pre>
+                <p>（ヒント: アルファベットも文字コードに基づいて比較できます。Aが最も小さく、Zが最も大きいです。）</p>
+            </div>
+        </section>
+        <section id="selection-sort-ex5-10jp" class="content-page">
+            <h2>選択ソート 演習: 10個（日本語）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>以下の日本語の単語の列を、選択ソートを使って辞書順（五十音順）に並べ替えてください。（読みで判断）</p>
+                <pre><code class="language-text">['みかん', 'りんご', 'いちご', 'ぶどう', 'すいか', 'もも', 'なし', 'かき', 'バナナ', 'キウイ']</code></pre>
+                <p>（ヒント: バナナは「ばなな」、キウイは「きうい」として考えます。）</p>
+            </div>
+        </section>
+
+        <!-- 実社会への応用 -->
+        <section id="real-world-applications" class="content-page">
+            <h2>実社会への応用</h2>
+            <p>ソートアルゴリズムは、コンピュータサイエンスの基本的な概念であるだけでなく、実世界の様々なシステムやアプリケーションで広く活用されています。</p>
+            <p>データが整理されている（ソートされている）と、多くの処理が効率的に行えるようになります。</p>
+        </section>
+        <section id="app-search-system" class="content-page"><h2>検索システムへの応用</h2> <p>ソートの最も重要な応用の一つが、<strong>検索の効率化</strong>です。</p><p>例えば、大量の本がランダムに置かれている図書館を想像してみてください。特定の1冊の本を探し出すのは非常に時間がかかります。しかし、本がタイトル順や著者名順にソートされていれば、目的の本をずっと速く見つけることができます。</p><p>コンピュータシステムにおいても同様です。</p><ul><li><strong>データベース検索:</strong> データベース内のレコードが特定のキー（例: ID、名前、日付）でソート（またはインデックス化）されていると、検索クエリの応答速度が大幅に向上します。B木インデックスなどは内部でソートされた構造を利用しています。</li><li><strong>二分探索 (Binary Search):</strong> ソート済みの配列やリストに対して非常に高速に動作する検索アルゴリズムです。データの中央の値と比較し、検索範囲を半分に絞り込みながら探索を進めます。データがソートされていなければ二分探索は使えません。</li><li><strong>ウェブ検索エンジン:</strong> 検索結果のランキング表示も一種のソートです。関連性の高い順、新着順など、様々な基準でソートされた結果がユーザーに提示されます。</li><li><strong>ファイルシステム:</strong> ファイルを名前順、サイズ順、更新日時順などで表示する機能は、ソートを利用しています。</li></ul><p>ソートは、検索処理のパフォーマンスを劇的に改善し、ユーザーエクスペリエンスを向上させるために不可欠な技術です。</p></section>
+        <section id="app-search-system-ex" class="content-page">
+            <h2>演習: 検索システムへの応用</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>あなたがオンラインショッピングサイトを開発しているとします。ユーザーが商品を検索した際、どのようなソートオプションを提供すると便利でしょうか？また、それぞれのソートオプションがなぜ役立つのか説明してください。（例: 価格順、人気順、新着順など）</p>
+            </div>
+        </section>
+        <section id="app-phonebook-system" class="content-page"><h2>電話帳システムへの応用</h2> <p>電話帳システム（紙媒体でもデジタルでも）は、ソートが活用される古典的で分かりやすい例です。</p><p><strong>電話帳におけるソートの利点:</strong></p><ul><li><strong>名前による検索の容易さ:</strong> 通常、電話帳は氏名（または会社名）の五十音順やアルファベット順にソートされています。これにより、特定の人や会社の電話番号を素早く見つけることができます。もしソートされていなければ、全件を最初から最後まで確認する必要があり、非常に非効率です。</li><li><strong>一覧性の向上:</strong> ソートされていることで、全体を眺めたときにどこに何があるか把握しやすくなります。</li></ul><p><strong>デジタル電話帳システムの場合:</strong></p><p>スマートフォンの連絡先アプリや、顧客管理システム(CRM)内の電話帳機能なども、内部的にはデータがソート可能な状態で管理されています。ユーザーは通常、表示順を「姓のフリガナ順」「名のフリガナ順」「登録日順」などから選択できます。</p><p>検索機能と組み合わせることで、膨大な連絡先データの中からでも、目的の情報を瞬時に引き出すことが可能です。例えば、「佐藤」と入力すれば、「佐藤」で始まる連絡先がソートされた状態でリストアップされます。</p><pre><code class="language-javascript">// 簡単な電話帳データの例 (JavaScript)
+let phonebook = [
+    { name: "山田 太郎", kana: "ヤマダ タロウ", phone: "090-1111-2222" },
+    { name: "佐藤 花子", kana: "サトウ ハナコ", phone: "080-3333-4444" },
+    { name: "鈴木 一郎", kana: "スズキ イチロウ", phone: "070-5555-6666" },
+    { name: "高橋 次郎", kana: "タカハシ ジロウ", phone: "090-7777-8888" },
+    { name: "田中 三郎", kana: "タナカ サブロウ", phone: "080-9999-0000" }
+];
+
+// カナでソートする関数
+function sortByKana(contacts) {
+    return contacts.sort((a, b) => {
+        if (a.kana < b.kana) return -1;
+        if (a.kana > b.kana) return 1;
+        return 0;
+    });
+}
+
+let sortedPhonebook = sortByKana(phonebook);
+console.log(sortedPhonebook);
+</code></pre></section>
+        <section id="app-phonebook-system-ex" class="content-page">
+            <h2>演習: 電話帳システムへの応用</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>あなたが500件の連絡先を持つデジタル電話帳アプリを設計するとします。</p>
+                <ol>
+                    <li>ユーザーが最も使いやすいと感じるデフォルトのソート順は何だと思いますか？その理由も述べてください。</li>
+                    <li>他にどのようなソートオプションを提供しますか？</li>
+                    <li>もし、連絡先を「グループ（例：家族、友人、仕事）」にも分類できるようにした場合、ソートや表示にどのような工夫が考えられますか？</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 挿入ソート -->
+        <section id="insertion-sort-learn" class="content-page"><h2>挿入ソート</h2><p>挿入ソート (Insertion Sort) は、整列済みの部分配列に、未整列の部分から要素を一つずつ取り出して適切な位置に挿入していくことでソートを行うアルゴリズムです。トランプの手札を整理する際に、新しいカードを既に並んでいる手札の正しい位置に差し込む操作に似ています。</p><p><strong>基本的な考え方:</strong></p><ol><li>配列の最初の要素は、それ自体で整列済みとみなします。</li><li>2番目の要素から順に注目し、その要素を「キー」とします。</li><li>キーを、それより前にある整列済みの部分配列の適切な位置に挿入します。挿入する際には、キーより大きい要素を一つずつ後ろにずらしていきます。</li><li>全ての要素が整列済み部分に取り込まれるまで、上記2～3の操作を繰り返します。</li></ol></section>
+        <section id="insertion-sort-steps" class="content-page"><h2>挿入ソート ステップ</h2> <p>挿入ソートが昇順にデータを並べ替える具体的なステップを見ていきましょう。</p><p>仮に、以下のような配列 `[5, 1, 4, 2, 8]` があるとします。</p><p><strong>初期状態:</strong> `[5, 1, 4, 2, 8]` (最初の要素 `5` は整列済みとみなす)</p><p>整列済み: `[5]` | 未整列: `[1, 4, 2, 8]`</p><h3>ステップ 1: 2番目の要素 `1` を挿入</h3><ul><li>キー: `1`</li><li>整列済み部分 `[5]` と比較。`1 < 5` なので、`5` を一つ右にずらす。</li><li>配列 (途中): `[ , 5, 4, 2, 8]`</li><li>空いた位置に `1` を挿入。</li><li>配列: `[1, 5, 4, 2, 8]`</li></ul><p>整列済み: `[1, 5]` | 未整列: `[4, 2, 8]`</p><h3>ステップ 2: 3番目の要素 `4` を挿入</h3><ul><li>キー: `4`</li><li>整列済み部分 `[1, 5]` と比較。<ul><li>`4 < 5` なので、`5` を一つ右にずらす。配列 (途中): `[1, , 5, 2, 8]`</li><li>`4 > 1` なので、`1` の後ろ (ずらした `5` の元の位置) が挿入位置。</li></ul></li><li>配列: `[1, 4, 5, 2, 8]`</li></ul><p>整列済み: `[1, 4, 5]` | 未整列: `[2, 8]`</p><h3>ステップ 3: 4番目の要素 `2` を挿入</h3><ul><li>キー: `2`</li><li>整列済み部分 `[1, 4, 5]` と比較。<ul><li>`2 < 5` なので、`5` を一つ右にずらす。配列 (途中): `[1, 4, , 5, 8]`</li><li>`2 < 4` なので、`4` を一つ右にずらす。配列 (途中): `[1, , 4, 5, 8]`</li><li>`2 > 1` なので、`1` の後ろ (ずらした `4` の元の位置) が挿入位置。</li></ul></li><li>配列: `[1, 2, 4, 5, 8]`</li></ul><p>整列済み: `[1, 2, 4, 5]` | 未整列: `[8]`</p><h3>ステップ 4: 5番目の要素 `8` を挿入</h3><ul><li>キー: `8`</li><li>整列済み部分 `[1, 2, 4, 5]` と比較。<ul><li>`8 > 5` なので、`5` の後ろが挿入位置。要素の移動はなし。</li></ul></li><li>配列: `[1, 2, 4, 5, 8]`</li></ul><p>整列済み: `[1, 2, 4, 5, 8]` | 未整列: なし</p><p><strong>最終結果: `[1, 2, 4, 5, 8]`</strong></p></section>
+        <section id="insertion-sort-merits" class="content-page"><h2>挿入ソートのメリット</h2> <p>挿入ソートは、いくつかの優れた特徴を持っています。</p><ul><li><strong>実装が比較的簡単:</strong> 選択ソートやバブルソートと同様に、アルゴリズムのロジックが直感的で理解しやすく、プログラムとして実装するのも容易です。</li><li><strong>安定ソートである:</strong> 同じ値を持つ要素の相対的な順序が、ソート前後で保持されます。これは、一部の応用では重要な特性となります。</li><li><strong>データがほぼ整列済みの場合に非常に高速:</strong> 配列がほとんどソートされている状態であれば、各要素を挿入する際の比較や移動の回数が非常に少なく済むため、O(N)に近い計算量で動作します。これは他のO(N<sup>2</sup>)のアルゴリズム（選択ソートなど）にはない大きな利点です。</li><li><strong>オンラインアルゴリズムである:</strong> データが逐次的に与えられる場合でも、その都度ソート状態を維持しながら要素を追加していくことができます。新しいデータが到着するたびに、それまでのソート済みリストに挿入すればよいためです。</li><li><strong>メモリ効率が良い (In-place):</strong> 追加の作業用メモリをほとんど必要としません。与えられた配列内で要素の移動を行うため、省メモリです。</li><li><strong>要素数が少ない場合に効率的:</strong> データ数が少ない（例えば数十件程度まで）場合は、クイックソートのようなより高度なアルゴリズムよりもオーバーヘッドが少なく、十分に高速に動作することがあります。このため、他の高度なソートアルゴリズム（マージソートやイントロソートなど）で、再帰の最終段階の小さな部分配列のソートに挿入ソートが利用されることがあります。</li></ul><p><strong>デメリット:</strong></p><ul><li><strong>平均計算量と最悪計算量が O(N<sup>2</sup>):</strong> データがランダムな場合や逆順に並んでいる場合、比較と要素のシフト操作が多くなり、処理時間がデータ量の二乗に比例して増加します。そのため、大規模なデータセットのソートには一般的に不向きです。</li></ul><p>これらの特性から、挿入ソートは特定の状況下では非常に有効なアルゴリズムと言えます。</p></section>
+        <section id="insertion-sort-example" class="content-page"><h2>挿入ソートの仕組み（5個）</h2> <p>挿入ソートの動作を、5つの要素で具体的に見てみましょう。</p><p>配列: `[34, 8, 64, 51, 32]`</p><p><strong>初期状態:</strong> `[34, 8, 64, 51, 32]` ( `34` は整列済みとみなす)</p><p>整列済み: `[34]` | 未整列: `[8, 64, 51, 32]`</p><p><strong>1. 要素 `8` を挿入:</strong></p><ul><li>キー: `8`</li><li>`8 < 34` なので `34` を右へシフト。</li><li>`[ , 34, 64, 51, 32]`</li><li>`8` を先頭に挿入。</li><li>結果: `[8, 34, 64, 51, 32]`</li></ul><p>整列済み: `[8, 34]` | 未整列: `[64, 51, 32]`</p><p><strong>2. 要素 `64` を挿入:</strong></p><ul><li>キー: `64`</li><li>`64 > 34`。`64 > 8`。`64` は `34` の後ろ、現在の位置でOK。移動なし。</li><li>結果: `[8, 34, 64, 51, 32]`</li></ul><p>整列済み: `[8, 34, 64]` | 未整列: `[51, 32]`</p><p><strong>3. 要素 `51` を挿入:</strong></p><ul><li>キー: `51`</li><li>`51 < 64` なので `64` を右へシフト。</li><li>`[8, 34,  , 64, 32]`</li><li>`51 > 34`。`51` を `34` と `64` (シフト後) の間に挿入。</li><li>結果: `[8, 34, 51, 64, 32]`</li></ul><p>整列済み: `[8, 34, 51, 64]` | 未整列: `[32]`</p><p><strong>4. 要素 `32` を挿入:</strong></p><ul><li>キー: `32`</li><li>`32 < 64` なので `64` を右へシフト。 `[8, 34, 51,  , 64]`</li><li>`32 < 51` なので `51` を右へシフト。 `[8, 34,  , 51, 64]`</li><li>`32 < 34` なので `34` を右へシフト。 `[8,  , 34, 51, 64]`</li><li>`32 > 8`。`32` を `8` と `34` (シフト後) の間に挿入。</li><li>結果: `[8, 32, 34, 51, 64]`</li></ul><p>整列済み: `[8, 32, 34, 51, 64]` | 未整列: なし</p><p><strong>最終結果: `[8, 32, 34, 51, 64]`</strong></p><p>このように、各要素が整列済みの部分に正しい順序で「挿入」されていく様子が分かります。</p></section>
+
+        <!-- クイックソート -->
+        <section id="quick-sort-learn" class="content-page"><h2>クイックソート</h2><p>クイックソート (Quick Sort) は、非常に高速なソートアルゴリズムの一つで、分割統治法 (Divide and Conquer) に基づいています。イギリスのコンピュータ科学者アントニー・ホーアによって1959年に開発されました。</p><p><strong>基本的な考え方:</strong></p><ol><li>配列内から適当な要素を一つ選び、これを「ピボット (pivot)」とします。</li><li>配列を、ピボットより小さい要素のグループ、ピボットと等しい要素のグループ（またはピボット自身）、ピボットより大きい要素のグループに分割します。（この操作を「パーティショニング」と呼びます）</li><li>ピボットより小さい要素のグループと、ピボットより大きい要素のグループに対して、再帰的にクイックソートを適用します。</li><li>分割されたグループの要素数が1以下になったら、そのグループはソート済みとみなし、再帰を終了します。</li></ol><p>適切に実装されたクイックソートは、平均的には O(N log N) の計算量で動作し、多くの実用的な場面で非常に高速です。ただし、ピボットの選び方によっては最悪計算量が O(N<sup>2</sup>) となる可能性があります。</p></section>
+        <section id="quick-sort-steps" class="content-page"><h2>クイックソート ステップ</h2> <p>クイックソートの動作は、ピボットの選び方やパーティショニングの具体的な方法によって多少異なりますが、ここでは一般的なホーアのパーティション方式に近い考え方で説明します。</p><p>仮に、以下のような配列 `[7, 2, 1, 6, 8, 5, 3, 4]` があるとします。</p><h3>ステップ 1: 最初のパーティショニング</h3><ol><li>配列: `[7, 2, 1, 6, 8, 5, 3, 4]`</li><li>ピボットを選びます。ここでは最初の要素 `7` をピボットとします。 (実際には、中央値やランダムな要素を選ぶ方が性能が安定します)</li><li>配列をスキャンし、要素をピボット `7` と比較して分割します。<ul><li>`7` より小さい要素を左側に、大きい要素を右側に集めます。</li><li>左から `7` 以上の要素を探し (ここでは先頭の `7`)、右から `7` 以下の要素を探します (ここでは `4`)。これらを交換します。 `[4, 2, 1, 6, 8, 5, 3, 7]` (ポインタが交差するまで繰り返す)</li><li>さらに進めると... (詳細なパーティションの動きは複雑なのでここでは結果を示します)</li></ul></li><li>パーティショニングの結果の一例 (ピボットが特定の位置に移動するとは限らない): `[4, 2, 1, 6, 3, 5]` (ピボット `7` より小さい) | `7` (ピボット) | `[8]` (ピボット `7` より大きい) 実際にはピボットを固定し、それ以外を左右に分けることが多いです。 ここでは、ピボットを `4` (例として配列の最後の要素) として、より一般的な Lomuto partition scheme で考えます。 配列: `[7, 2, 1, 6, 8, 5, 3, 4]` ピボット: `4`</li><li>ピボット `4` より小さい要素を左に、大きい要素を右に集めます。<ul><li>`i` を左端の前に、`j` を左端から右端の手前まで動かす。</li><li>`array[j] <= pivot` なら `i` を進めて `array[i]` と `array[j]` を交換。</li></ul><pre><code class="language-text">[7, 2, 1, 6, 8, 5, 3, 4]  pivot = 4
+ i
+ j
+-> 2 <= 4: swap(arr[i+1], arr[j]) -> [2, 7, 1, 6, 8, 5, 3, 4] i=0
+   j
+-> 1 <= 4: swap(arr[i+1], arr[j]) -> [2, 1, 7, 6, 8, 5, 3, 4] i=1
+      j
+-> 6 > 4
+         j
+-> 8 > 4
+            j
+-> 5 > 4
+               j
+-> 3 <= 4: swap(arr[i+1], arr[j]) -> [2, 1, 3, 6, 8, 5, 7, 4] i=2
+                  j
+最後に pivot と arr[i+1] を交換: swap(arr[i+1], arr[pivot_idx])
+-> [2, 1, 3, 4, 8, 5, 7, 6]  (pivot=4が正しい位置に)</code></pre></li><li>分割結果:<ul><li>左部分配列: `[2, 1, 3]` (ピボット `4` より小さい)</li><li>ピボット: `4`</li><li>右部分配列: `[8, 5, 7, 6]` (ピボット `4` より大きい)</li></ul></li></ol><h3>ステップ 2: 左部分配列 `[2, 1, 3]` を再帰的にソート</h3><ol><li>配列: `[2, 1, 3]`。ピボットを `3` (最後の要素) とします。</li><li>パーティショニング:<pre><code class="language-text">[2, 1, 3] pivot = 3
+ i
+ j
+-> 2 <= 3: swap(arr[i+1], arr[j]) -> [2, 1, 3] i=0
+   j
+-> 1 <= 3: swap(arr[i+1], arr[j]) -> [2, 1, 3] i=1 (間違い、正しくは[1,2,3])
+   正しい処理:
+   [2, 1, 3] pivot = 3
+    i=-1
+    j=0: arr[0]=2 <= 3. i=0. swap(arr[0],arr[0]) -> [2,1,3]
+    j=1: arr[1]=1 <= 3. i=1. swap(arr[1],arr[1]) -> [2,1,3]
+    最後に swap(arr[i+1], arr[pivot_idx]) -> swap(arr[2], arr[2]) -> [2,1,3]
+    これはピボットが最大値の場合。
+    もしピボットを最初の要素 `2` とすると: (Hoare partition の方が説明しやすいかも)
+    ピボット: `2`. 左部分: `[1]`, 右部分: `[3]`</code></pre></li><li>左部分 `[1]` (ソート済み), 右部分 `[3]` (ソート済み)</li><li>結果: `[1, 2, 3]`</li></ol><h3>ステップ 3: 右部分配列 `[8, 5, 7, 6]` を再帰的にソート</h3><ol><li>配列: `[8, 5, 7, 6]`。ピボットを `6` (最後の要素) とします。</li><li>パーティショニング:<pre><code class="language-text">[8, 5, 7, 6] pivot = 6
+ i=-1
+ j=0: arr[0]=8 > 6
+ j=1: arr[1]=5 <= 6. i=0. swap(arr[0],arr[1]) -> [5, 8, 7, 6]
+ j=2: arr[2]=7 > 6
+ (After loop) swap(arr[i+1], arr[pivot_index]): swap(arr[1], arr[3]) -> [5, 6, 7, 8]</code></pre></li><li>分割結果:<ul><li>左部分配列: `[5]` (ピボット `6` より小さい) -> ソート済み</li><li>ピボット: `6`</li><li>右部分配列: `[7, 8]` (ピボット `6` より大きい)</li></ul></li><li>右部分配列 `[7, 8]` を再帰的にソート:<ul><li>ピボットを `8` とすると、左部分 `[7]`、右部分なし。結果 `[7, 8]`。</li></ul></li><li>結果: `[5, 6, 7, 8]`</li></ol><h3>ステップ 4: 全体を結合</h3><p>左部分 `[1, 2, 3]` + ピボット `4` + 右部分 `[5, 6, 7, 8]`</p><p><strong>最終結果: `[1, 2, 3, 4, 5, 6, 7, 8]`</strong></p><p>クイックソートのステップは、ピボットの選択戦略とパーティション戦略によって具体的な動作が変わるため、上記は一例です。重要なのは「分割して、それぞれを独立にソートし、最後に（暗黙的に）結合される」という分割統治の考え方です。</p></section>
+        <section id="quick-sort-merits" class="content-page"><h2>クイックソートのメリット</h2> <p>クイックソートは、その名の通り高速なソートアルゴリズムであり、多くのメリットがあります。</p><ul><li><strong>平均的に非常に高速:</strong> 平均計算量は O(N log N) であり、これは比較ソートアルゴリズムの理論的な下限に近いです。実際の実装でも、多くのケースで他の O(N log N) アルゴリズム（マージソートやヒープソート）よりも定数倍高速に動作することが多いです。</li><li><strong>In-place（インプレース）である:</strong> マージソートのように追加の大きなメモリ領域を必要とせず、与えられた配列内で要素を並べ替えることができます（スタック領域は再帰呼び出しのために使用します）。メモリ効率が良いと言えます。</li><li><strong>キャッシュ効率が良い:</strong> データへのアクセスが局所的になる傾向があり、CPUキャッシュを効率的に利用できるため、実測性能が高くなりやすいです。</li><li><strong>実装のバリエーションが豊富:</strong> ピボットの選択方法（最初の要素、中央の要素、ランダムな要素、3つの中央値など）やパーティショニングの方法（Lomuto方式、Hoare方式など）に様々なバリエーションがあり、状況に応じて最適化を図ることができます。</li></ul><p><strong>デメリットと注意点:</strong></p><ul><li><strong>最悪計算量が O(N<sup>2</sup>):</strong> ピボットの選択が毎回最悪（常に最小または最大の要素が選ばれるなど）の場合、分割が偏ってしまい、計算量が O(N<sup>2</sup>) になります。これは、データが既にソート済み、または逆順にソート済みの場合に単純なピボット選択戦略（例：常に先頭要素を選ぶ）で発生しやすいです。これを避けるために、ランダムピボット選択や三数中央値法などが用いられます。</li><li><strong>安定ソートではない:</strong> 一般的なクイックソートの実装は安定ソートではありません。つまり、同じ値を持つ要素の元の順序がソート後に保持されるとは限りません。安定性が必要な場合は、追加の工夫をするか、マージソートなどの安定なアルゴリズムを検討する必要があります。</li><li><strong>再帰呼び出しによるスタックオーバーフローの可能性:</strong> 深い再帰が発生すると、スタック領域を使い果たしてプログラムがクラッシュする可能性があります。末尾再帰の最適化や、非再帰的な実装で回避できます。また、小さい部分配列には挿入ソートなどを用いるハイブリッドアプローチも有効です。</li></ul><p>これらの特性を理解し、適切に実装・利用することで、クイックソートは非常に強力なソート手法となります。多くのプログラミング言語の標準ソートライブラリ（の一部）でも採用されています（イントロソートなど、クイックソートを改良したものが使われることが多い）。</p></section>
+        <section id="quick-sort-example" class="content-page"><h2>クイックソートの仕組み（5個）</h2> <p>クイックソートの動作を、5つの要素で見てみましょう。ここではピボットを各部分配列の最後の要素とし、Lomutoパーティションスキームを用います。</p><p>配列: `[34, 8, 64, 51, 32]`</p><h3>初期呼び出し: `quickSort([34, 8, 64, 51, 32], 0, 4)`</h3><ol><li>ピボット: `arr[4]` = `32`</li><li>パーティショニング (arr, 0, 4, pivot=32):<ul><li>`i = -1` (0-1)</li><li>`j = 0`: `arr[0]`(34) > 32.</li><li>`j = 1`: `arr[1]`(8) <= 32. `i` becomes 0. `swap(arr[0], arr[1])`. Array: `[8, 34, 64, 51, 32]`</li><li>`j = 2`: `arr[2]`(64) > 32.</li><li>`j = 3`: `arr[3]`(51) > 32.</li><li>ループ終了。 `swap(arr[i+1], arr[4])` => `swap(arr[1], arr[4])`.</li><li>Array: `[8, 32, 64, 51, 34]`. ピボット `32` の最終位置はインデックス `1`。</li></ul></li><li>ピボット `32` の位置: 1</li><li>再帰呼び出し1: `quickSort([8, 32, 64, 51, 34], 0, 0)` (左部分 `[8]`)<ul><li>要素数1なので終了。 `[8]` はソート済み。</li></ul></li><li>再帰呼び出し2: `quickSort([8, 32, 64, 51, 34], 2, 4)` (右部分 `[64, 51, 34]`)</li></ol><h3>再帰呼び出し2: `quickSort([8, 32, 64, 51, 34], 2, 4)`</h3><ol><li>対象配列の部分: `[64, 51, 34]` (インデックス 2 から 4)</li><li>ピボット: `arr[4]` = `34`</li><li>パーティショニング (arr, 2, 4, pivot=34):<ul><li>`i = 1` (2-1)</li><li>`j = 2`: `arr[2]`(64) > 34.</li><li>`j = 3`: `arr[3]`(51) > 34.</li><li>ループ終了。 `swap(arr[i+1], arr[4])` => `swap(arr[2], arr[4])`.</li><li>Array: `[8, 32, 34, 51, 64]`. ピボット `34` の最終位置はインデックス `2`。</li></ul></li><li>ピボット `34` の位置: 2</li><li>再帰呼び出し2-1: `quickSort([8, 32, 34, 51, 64], 2, 1)` (左部分なし、low > high) -> 終了</li><li>再帰呼び出し2-2: `quickSort([8, 32, 34, 51, 64], 3, 4)` (右部分 `[51, 64]`)</li></ol><h3>再帰呼び出し2-2: `quickSort([8, 32, 34, 51, 64], 3, 4)`</h3><ol><li>対象配列の部分: `[51, 64]` (インデックス 3 から 4)</li><li>ピボット: `arr[4]` = `64`</li><li>パーティショニング (arr, 3, 4, pivot=64):<ul><li>`i = 2` (3-1)</li><li>`j = 3`: `arr[3]`(51) <= 64. `i` becomes 3. `swap(arr[3], arr[3])`. Array: `[8, 32, 34, 51, 64]`</li><li>ループ終了。 `swap(arr[i+1], arr[4])` => `swap(arr[4], arr[4])`.</li><li>Array: `[8, 32, 34, 51, 64]`. ピボット `64` の最終位置はインデックス `4`。</li></ul></li><li>ピボット `64` の位置: 4</li><li>再帰呼び出し2-2-1: `quickSort([8, 32, 34, 51, 64], 3, 3)` (左部分 `[51]`)<ul><li>要素数1なので終了。 `[51]` はソート済み。</li></ul></li><li>再帰呼び出し2-2-2: `quickSort([8, 32, 34, 51, 64], 5, 4)` (右部分なし、low > high) -> 終了</li></ol><p>全ての再帰呼び出しが終了すると、配列全体がソートされています。</p><p><strong>最終結果: `[8, 32, 34, 51, 64]`</strong></p><p>（注: Lomutoパーティションスキームはピボットが常に部分配列の最後に配置されるため、説明がやや複雑になることがあります。Hoareパーティションスキームや、ピボットを最初に選んでから左右を詰めていく方法など、他のパーティション方法も存在します。）</p></section>
+
+        <!-- シェルソート -->
+        <section id="shell-sort-learn" class="content-page"><h2>シェルソート</h2><p>シェルソート (Shell Sort) は、挿入ソートの改良版と位置づけられるソートアルゴリズムです。ドナルド・シェルによって1959年に考案されました。挿入ソートが隣り合った要素しか比較・交換しないため、要素が本来あるべき位置から遠く離れている場合に効率が悪いという点を改善します。</p><p><strong>基本的な考え方:</strong></p><ol><li>まず、配列全体を一定の間隔 `h` (ギャップと呼ぶ) を空けた要素からなる部分配列に分割します。例えば、ギャップ `h=4` なら、(A[0], A[4], A[8], ...), (A[1], A[5], A[9], ...), ... のような複数の部分配列ができます。</li><li>これらの各部分配列に対して、挿入ソートを適用します。これにより、遠く離れた要素同士が交換され、要素がおおまかに正しい位置に近づきます。</li><li>次に、ギャップ `h` を小さくしていき（例えば `h = h/3` や `h = h/2.2` など、特定の数列に従う）、再度ステップ1と2を繰り返します。</li><li>最終的にギャップ `h` が `1` になると、アルゴリズムは通常の挿入ソートと同じ動作になり、配列全体が完全にソートされます。この時点では、要素は既にかなり整列された状態に近づいているため、挿入ソートの得意な状況（ほぼ整列済みデータ）となり、高速に動作します。</li></ol><p>シェルソートの性能は、このギャップ `h` の選び方（増分系列）に大きく依存します。適切な増分系列を用いることで、平均計算量を O(N (log N)<sup>2</sup>) や O(N<sup>1.5</sup>) 程度に改善できます。</p></section>
+        <section id="shell-sort-steps" class="content-page"><h2>シェルソート ステップ</h2> <p>シェルソートの動作をステップごとに見ていきましょう。</p><p>仮に、以下のような配列 `[34, 8, 64, 51, 32, 21, 17, 90]` があるとします。(要素数8)</p><p>ギャップの系列として、例えば `h = N/2, N/4, ..., 1` (Hibbard系列などもっと良いものがある) を使います。ここでは単純に `h=4, 2, 1` とします。</p><h3>ステップ 1: ギャップ `h = 4` でソート</h3><p>配列: `[34, 8, 64, 51, 32, 21, 17, 90]`</p><p>以下の4つの部分配列に対して挿入ソートを行います。</p><ul><li>グループ1 (インデックス 0, 4): `[34, 32]` → ソート後 `[32, 34]`<ul><li>配列は `[32, 8, 64, 51, 34, 21, 17, 90]` となる</li></ul></li><li>グループ2 (インデックス 1, 5): `[8, 21]` → ソート後 `[8, 21]` (変化なし)<ul><li>配列は `[32, 8, 64, 51, 34, 21, 17, 90]` となる</li></ul></li><li>グループ3 (インデックス 2, 6): `[64, 17]` → ソート後 `[17, 64]`<ul><li>配列は `[32, 8, 17, 51, 34, 21, 64, 90]` となる</li></ul></li><li>グループ4 (インデックス 3, 7): `[51, 90]` → ソート後 `[51, 90]` (変化なし)<ul><li>配列は `[32, 8, 17, 51, 34, 21, 64, 90]` となる</li></ul></li></ul><p>ギャップ4でのソート後配列: `[32, 8, 17, 51, 34, 21, 64, 90]`</p><h3>ステップ 2: ギャップ `h = 2` でソート</h3><p>配列: `[32, 8, 17, 51, 34, 21, 64, 90]`</p><p>以下の2つの部分配列に対して挿入ソートを行います。</p><ul><li>グループ1 (インデックス 0, 2, 4, 6): `[32, 17, 34, 64]`<ul><li>`17` を挿入: `[17, 32, 34, 64]`</li><li>`34` を挿入: (変化なし)</li><li>`64` を挿入: (変化なし)</li><li>ソート後: `[17, 32, 34, 64]`</li><li>配列に反映: `[17, 8, 32, 51, 34, 21, 64, 90]` (グループ1の要素が更新される)</li></ul></li><li>グループ2 (インデックス 1, 3, 5, 7): `[8, 51, 21, 90]`<ul><li>`51` を挿入: (変化なし)</li><li>`21` を挿入: `[8, 21, 51, 90]`</li><li>`90` を挿入: (変化なし)</li><li>ソート後: `[8, 21, 51, 90]`</li><li>配列に反映: `[17, 8, 32, 21, 34, 51, 64, 90]` (グループ2の要素が更新される)</li></ul></li></ul> <p>ギャップ2でのソート後配列: `[17, 8, 32, 21, 34, 51, 64, 90]`</p><h3>ステップ 3: ギャップ `h = 1` でソート</h3><p>配列: `[17, 8, 32, 21, 34, 51, 64, 90]`</p><p>これは通常の挿入ソートと同じです。配列全体 `[17, 8, 32, 21, 34, 51, 64, 90]` に対して挿入ソートを適用します。</p><ul><li>`8` を挿入: `[8, 17, 32, 21, 34, 51, 64, 90]`</li><li>`32` を挿入: (変化なし)</li><li>`21` を挿入: `[8, 17, 21, 32, 34, 51, 64, 90]`</li><li>`34` を挿入: (変化なし)</li><li>`51` を挿入: (変化なし)</li><li>`64` を挿入: (変化なし)</li><li>`90` を挿入: (変化なし)</li></ul><p>ギャップ1でのソート後配列 (最終結果): `[8, 17, 21, 32, 34, 51, 64, 90]`</p><p>最初のギャップが大きい段階で、要素が大きく移動し、全体がある程度ソートされた状態になります。ギャップを小さくしていくにつれて、より細かい調整が行われ、最終的にギャップ1の挿入ソートでは、ほぼ整列されたデータに対して効率的に動作します。</p></section>
+        <section id="shell-sort-merits" class="content-page"><h2>シェルソートのメリット</h2> <p>シェルソートは、挿入ソートを改良したもので、いくつかの実用的な利点があります。</p><ul><li><strong>挿入ソートより高速:</strong> 一般的に、単純な挿入ソートやバブルソート（これらも O(N<sup>2</sup>) のアルゴリズム）よりも高速です。特にデータ量が多い場合にその差が顕著になります。平均計算時間はギャップの系列に依存しますが、O(N<sup>2</sup>) よりはかなり改善されます（例: O(N (log N)<sup>2</sup>) や O(N<sup>1.5</sup>)）。</li><li><strong>実装が比較的容易:</strong> クイックソートやマージソートのような高度な分割統治法を用いるアルゴリズムに比べると、シェルソートの基本的なロジックは挿入ソートの応用であり、理解しやすく実装もそれほど複雑ではありません。</li><li><strong>In-place（インプレース）に近い:</strong> 追加の作業用メモリをほとんど必要としません（ギャップ系列を保持する領域程度）。これはマージソートなどと比較してメモリ効率が良い点です。</li><li><strong>中規模のデータセットに適している:</strong> データ数が数千から数万程度の場合、クイックソートなどのより洗練されたアルゴリズムと比較しても遜色ない性能を発揮することがあり、実装の容易さから選択肢となることがあります。</li><li><strong>安定ソートではない:</strong> 通常の実装では安定ソートではありません。同じ値を持つ要素の元の順序が保持されるとは限りません。</li></ul><p><strong>デメリットと注意点:</strong></p><ul><li><strong>最適な増分系列（ギャップ系列）の選択が難しい:</strong> シェルソートの性能は増分系列に大きく依存します。理論的に最適な系列はまだ完全には解明されておらず、経験的に良いとされる系列（例: Knuth系列、Sedgewick系列など）がいくつか提案されています。単純な系列（例: N/2, N/4, ...）では性能が思ったほど出ないことがあります。</li><li><strong>最悪計算量:</strong> 増分系列によっては、最悪計算量が O(N<sup>2</sup>) となる可能性がありますが、よく使われる系列ではこれより良い性能が期待できます。</li><li><strong>動作の解析が複雑:</strong> アルゴリズムの正確な平均計算時間や最悪計算時間を理論的に解析するのは、他の多くのソートアルゴリズムよりも難しいとされています。</li></ul><p>シェルソートは、O(N log N) のアルゴリズム（クイックソート、マージソートなど）が登場する以前は、最も高速な汎用ソートアルゴリズムの一つでした。現在でも、その実装の容易さとそこそこの性能から、特定の状況で利用されることがあります。</p></section>
+        <section id="shell-sort-example" class="content-page"><h2>シェルソートの仕組み（5個）</h2> <p>シェルソートの動作を、5つの要素で具体的に見てみましょう。</p><p>配列: `[34, 8, 64, 51, 32]` (要素数 N=5)</p><p>ギャップの系列として、ここでは `h = floor(N/2), floor(h/2), ..., 1` を使います。</p><p>初期ギャップ: `h = floor(5/2) = 2`</p><h3>ステップ 1: ギャップ `h = 2` でソート</h3><p>配列: `[34, 8, 64, 51, 32]`</p><p>以下の部分配列に挿入ソートを適用します:</p><ul><li><strong>グループ1 (インデックス 0, 2, 4): `[34, 64, 32]`</strong><ul><li>`64` を挿入 (対 `34`): `[34, 64, 32]` (変化なし)</li><li>`32` を挿入 (対 `64`, `34`):<ul><li>`32 < 64` → `64` をシフト (仮)</li><li>`32 < 34` → `34` をシフト (仮)</li><li>結果: `[32, 34, 64]` (このグループ内でのソート結果)</li></ul></li><li>配列に反映: `[32, 8, 34, 51, 64]` (元の配列の対応する位置が更新される)</li></ul></li><li><strong>グループ2 (インデックス 1, 3): `[8, 51]`</strong><ul><li>`51` を挿入 (対 `8`): `[8, 51]` (変化なし)</li><li>配列に反映: (上記の配列は既にこのグループの結果を織り込んでいるので、実質変化なし) `[32, 8, 34, 51, 64]`</li></ul></li></ul><p>ギャップ `h=2` でのソート後配列: `[32, 8, 34, 51, 64]`</p><h3>ステップ 2: 次のギャップ `h = floor(2/2) = 1` でソート</h3><p>配列: `[32, 8, 34, 51, 64]`</p><p>ギャップ `h=1` は、通常の挿入ソートと同じです。配列全体に挿入ソートを適用します。</p><ul><li>`32` (最初の要素) は整列済みとみなす。</li><li><strong>キー `8` (インデックス 1):</strong><ul><li>`8 < 32`。`32` を右にシフト。`8` を先頭に挿入。</li><li>配列: `[8, 32, 34, 51, 64]`</li></ul></li><li><strong>キー `34` (インデックス 2):</strong><ul><li>`34 > 32`。`34 > 8`。位置はそのまま。</li><li>配列: `[8, 32, 34, 51, 64]`</li></ul></li><li><strong>キー `51` (インデックス 3):</strong><ul><li>`51 > 34`。位置はそのまま。</li><li>配列: `[8, 32, 34, 51, 64]`</li></ul></li><li><strong>キー `64` (インデックス 4):</strong><ul><li>`64 > 51`。位置はそのまま。</li><li>配列: `[8, 32, 34, 51, 64]`</li></ul></li></ul><p>ギャップ `h=1` でのソート後配列 (最終結果): `[8, 32, 34, 51, 64]`</p><p>この例では、ギャップ2の段階で要素がある程度適切な位置に近づき、最後のギャップ1（挿入ソート）での処理が効率的に行われました。</p></section>
+
+        <!-- 挿入ソートの演習 -->
+        <section id="insertion-sort-exercise" class="content-page">
+            <h2>挿入ソートの演習</h2>
+            <p>挿入ソートの手順に従って、以下のデータを昇順に並べ替えてください。各ステップでキーとなる要素と、それが挿入されるまでの配列の変化を示すと理解が深まります。</p>
+        </section>
+        <section id="is-ex-5num" class="content-page">
+            <h2>挿入ソート 演習: 5個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `[45, 12, 67, 23, 9]` を挿入ソートで昇順に並べ替えてください。</p>
+                <p><strong>解答形式例（キーが12の場合）:</strong></p>
+                <ul>
+                    <li>初期 (12より前はソート済): `[45 | 12, 67, 23, 9]`</li>
+                    <li>キー: 12. 45を右へシフト.</li>
+                    <li>挿入後: `[12, 45 | 67, 23, 9]`</li>
+                </ul>
+            </div>
+        </section>
+        <section id="is-ex-7items" class="content-page">
+            <h2>挿入ソート 演習: 7個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['S', 'O', 'R', 'T', 'I', 'N', 'G']` を挿入ソートで辞書順に並べ替えてください。</p>
+            </div>
+        </section>
+        <section id="is-ex-10num" class="content-page">
+            <h2>挿入ソート 演習: 10個（数字）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]` を挿入ソートで昇順に並べ替えてください。</p>
+                <p>(このケースでは挿入ソートの計算量が多くなることを体感できます)</p>
+            </div>
+        </section>
+        <section id="is-ex-10abc" class="content-page">
+            <h2>挿入ソート 演習: 10個（ABC）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['Z', 'X', 'V', 'T', 'R', 'P', 'N', 'L', 'J', 'H']` を挿入ソートで辞書順に並べ替えてください。</p>
+            </div>
+        </section>
+        <section id="is-ex-10jp" class="content-page">
+            <h2>挿入ソート 演習: 10個（日本語）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['やま', 'かわ', 'そら', 'うみ', 'もり', 'はな', 'つき', 'ほし', 'かぜ', 'ゆき']` を挿入ソートで辞書順（読み）に並べ替えてください。</p>
+            </div>
+        </section>
+
+        <!-- クイックソートの演習 -->
+        <section id="quick-sort-exercise" class="content-page">
+            <h2>クイックソートの演習</h2>
+            <p>クイックソートの手順に従って、以下のデータを昇順に並べ替えてください。ピボットの選択方法（例：各部分配列の最後の要素）とパーティショニングの過程を明確に示してください。再帰的な呼び出しの様子も追跡しましょう。</p>
+        </section>
+        <section id="qs-ex-5num" class="content-page">
+            <h2>クイックソート 演習: 5個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `[29, 10, 14, 37, 20]` をクイックソートで昇順に並べ替えてください。（ピボットは各部分配列の最後の要素とします）</p>
+                <p><strong>解答形式例（最初の呼び出し）:</strong></p>
+                <ul>
+                    <li>対象: `[29, 10, 14, 37, 20]`. ピボット: 20 (最後の要素)</li>
+                    <li>パーティション後: `[10, 14, 20, 37, 29]` (ピボット20の最終位置はインデックス2)</li>
+                    <li>再帰1: `quickSort([10, 14], ...)`</li>
+                    <li>再帰2: `quickSort([37, 29], ...)`</li>
+                </ul>
+            </div>
+        </section>
+        <section id="qs-ex-7items" class="content-page">
+            <h2>クイックソート 演習: 7個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['Q', 'U', 'I', 'C', 'K', 'S', 'T']` をクイックソートで辞書順に並べ替えてください。（ピボットは各部分配列の最後の要素とします）</p>
+            </div>
+        </section>
+        <section id="qs-ex-10num" class="content-page">
+            <h2>クイックソート 演習: 10個（数字）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `[5, 1, 9, 3, 7, 2, 8, 6, 0, 4]` をクイックソートで昇順に並べ替えてください。（ピボットは各部分配列の最初の要素とします）</p>
+            </div>
+        </section>
+        <section id="qs-ex-10abc" class="content-page">
+            <h2>クイックソート 演習: 10個（ABC）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['M', 'E', 'R', 'G', 'E', 'S', 'O', 'R', 'T', 'A']` をクイックソートで辞書順に並べ替えてください。（ピボットは各部分配列の中央の要素、または最後の要素など任意に決めてください）</p>
+            </div>
+        </section>
+        <section id="qs-ex-10jp" class="content-page">
+            <h2>クイックソート 演習: 10個（日本語）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['けやき', 'さくら', 'もみじ', 'かつら', 'いちょう', 'うめ', 'つばき', 'すぎ', 'ひのき', 'まつ']` をクイックソートで辞書順（読み）に並べ替えてください。（ピボットは各部分配列の最後の要素とします）</p>
+            </div>
+        </section>
+
+        <!-- シェルソートの演習 -->
+        <section id="shell-sort-exercise" class="content-page">
+            <h2>シェルソートの演習</h2>
+            <p>シェルソートの手順に従って、以下のデータを昇順に並べ替えてください。使用するギャップ系列を明示し、各ギャップでの部分配列に対する挿入ソートの過程を示してください。</p>
+        </section>
+        <section id="ss-ex-5num" class="content-page">
+            <h2>シェルソート 演習: 5個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `[65, 22, 98, 41, 15]` をシェルソートで昇順に並べ替えてください。</p>
+                <p>ギャップ系列: `h = floor(N/2), floor(h/2), ..., 1` を使用してください。 (N=5なので、h = 2, 1)</p>
+                 <p><strong>解答形式例（ギャップ h=2 の場合）:</strong></p>
+                <ul>
+                    <li>配列: `[65, 22, 98, 41, 15]`</li>
+                    <li>グループ1 (idx 0,2,4): `[65, 98, 15]` -> ソート後 `[15, 65, 98]`
+                        <ul><li>反映後配列: `[15, 22, 65, 41, 98]`</li></ul>
+                    </li>
+                    <li>グループ2 (idx 1,3): `[22, 41]` -> ソート後 `[22, 41]` (変化なし)
+                        <ul><li>反映後配列: `[15, 22, 65, 41, 98]`</li></ul>
+                    </li>
+                    <li>ギャップ2完了時: `[15, 22, 65, 41, 98]`</li>
+                </ul>
+            </div>
+        </section>
+        <section id="ss-ex-7items" class="content-page">
+            <h2>シェルソート 演習: 7個</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `[81, 94, 11, 96, 12, 35, 17]` をシェルソートで昇順に並べ替えてください。</p>
+                <p>ギャップ系列: `h = floor(N/2), floor(h/2), ..., 1` を使用してください。 (N=7なので、h = 3, 1)</p>
+            </div>
+        </section>
+        <section id="ss-ex-10num" class="content-page">
+            <h2>シェルソート 演習: 10個（数字）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `[72, 19, 63, 8, 51, 37, 95, 24, 40, 10]` をシェルソートで昇順に並べ替えてください。</p>
+                <p>ギャップ系列: Knuth系列 `(3^k - 1) / 2` をN未満で降順に使用 (例: N=10なら h=4, 1)。</p>
+            </div>
+        </section>
+        <section id="ss-ex-10abc" class="content-page">
+            <h2>シェルソート 演習: 10個（ABC）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['S', 'H', 'E', 'L', 'L', 'S', 'O', 'R', 'T', 'X']` をシェルソートで辞書順に並べ替えてください。</p>
+                 <p>ギャップ系列: `h = floor(N/2), floor(h/2), ..., 1` を使用してください。 (N=10なので、h = 5, 2, 1)</p>
+            </div>
+        </section>
+        <section id="ss-ex-10jp" class="content-page">
+            <h2>シェルソート 演習: 10個（日本語）</h2>
+            <div class="exercise-box">
+                <h4>問題</h4>
+                <p>配列: `['アルゴリズム', 'データ構造', 'ソート', '検索', 'プログラム', 'コンピュータ', 'システム', 'ネットワーク', 'データベース', 'セキュリティ']` をシェルソートで辞書順（読み）に並べ替えてください。</p>
+                <p>ギャップ系列: `h = floor(N/2.2)` で計算し、1になるまで繰り返すなど、任意の系列を試してください。 (例: N=10, h=floor(10/2.2)=4, h=floor(4/2.2)=1 -> h=4,1 )</p>
+            </div>
+        </section>
+
+        <!-- まとめ -->
+        <section id="summary" class="content-page">
+            <h2>まとめ</h2>
+            <p>この学習モジュールでは、ソートの基本的な概念から、代表的なソートアルゴリズムである選択ソート、挿入ソート、クイックソート、シェルソートについて学びました。また、それらが実世界のシステムでどのように応用されているかについても触れました。</p>
+        </section>
+        <section id="summary-comparison" class="content-page"><h2>それぞれのソートについて・社会の仕組みへの応用</h2><h3>各ソートアルゴリズムの比較</h3><p>以下は、今回学習した主要なソートアルゴリズムの特徴をまとめたものです。</p><table border="1" style="width:100%; border-collapse: collapse; font-size: 12px;"><thead><tr><th style="padding: 6px; background-color: #f0f0f0;">アルゴリズム</th><th style="padding: 6px; background-color: #f0f0f0;">平均計算量</th><th style="padding: 6px; background-color: #f0f0f0;">最悪計算量</th><th style="padding: 6px; background-color: #f0f0f0;">安定性</th><th style="padding: 6px; background-color: #f0f0f0;">作業領域 (In-place)</th><th style="padding: 6px; background-color: #f0f0f0;">主な特徴・適した場面</th></tr></thead><tbody><tr><td style="padding: 6px;">選択ソート</td><td style="padding: 6px;">O(N<sup>2</sup>)</td><td style="padding: 6px;">O(N<sup>2</sup>)</td><td style="padding: 6px;">不安定</td><td style="padding: 6px;">Yes</td><td style="padding: 6px;">実装が単純。要素の交換回数が少ない。小規模データ。</td></tr><tr><td style="padding: 6px;">挿入ソート</td><td style="padding: 6px;">O(N<sup>2</sup>)</td><td style="padding: 6px;">O(N<sup>2</sup>)</td><td style="padding: 6px;">安定</td><td style="padding: 6px;">Yes</td><td style="padding: 6px;">ほぼ整列済みのデータに高速。オンライン処理。小規模データ。他のソートの部分処理。</td></tr><tr><td style="padding: 6px;">クイックソート</td><td style="padding: 6px;">O(N log N)</td><td style="padding: 6px;">O(N<sup>2</sup>)</td><td style="padding: 6px;">不安定</td><td style="padding: 6px;">Yes (スタック除く)</td><td style="padding: 6px;">一般的に非常に高速。大規模データ。ただし最悪ケースに注意。</td></tr><tr><td style="padding: 6px;">シェルソート</td><td style="padding: 6px;">依存 (例: O(N(logN)<sup>2</sup>))</td><td style="padding: 6px;">依存 (例: O(N<sup>2</sup>))</td><td style="padding: 6px;">不安定</td><td style="padding: 6px;">Yes</td><td style="padding: 6px;">挿入ソートの改良。中規模データ。実装が比較的容易。</td></tr></tbody></table><p>（注: マージソートやヒープソートなど、他にも重要な O(N log N) のアルゴリズムがあります。）</p><h3>社会の仕組みへの応用</h3><p>ソートは、目に見える形だけでなく、社会の様々なシステムの裏側で活用されています。</p><ul><li><strong>情報検索:</strong> Googleのような検索エンジン、図書館の蔵書検索、データベースシステムなど、情報を効率的に見つける必要がある場所では必ずと言っていいほどソート（またはソートに関連するデータ構造、例：インデックス）が使われています。</li><li><strong>ランキング表示:</strong> 売上ランキング、人気投票の結果、スポーツの順位表、試験の成績順など、順序をつけて情報を提示する際にはソートが不可欠です。</li><li><strong>データ分析と可視化:</strong> データを分析しやすくしたり、グラフなどで可視化したりする前に、特定の基準でソートすることがよく行われます。これにより、傾向やパターンを発見しやすくなります。</li><li><strong>物流・配送システム:</strong> 配送ルートの最適化や、荷物の仕分け作業などでも、効率化のためにソートの考え方が応用されることがあります。例えば、郵便番号順に仕分けられた郵便物など。</li><li><strong>スケジューリング:</strong> タスクの優先度順、締切順など、タスク管理やジョブスケジューリングにおいてもソートが活用されます。</li><li><strong>Eコマース:</strong> 商品を価格順、評価順、新着順などで並べ替える機能は、顧客の購買体験を向上させるために重要です。</li></ul><p>ソートアルゴリズムの学習は、単にプログラミング技術を学ぶだけでなく、問題解決のための論理的な思考方法や効率化の考え方を養う上でも非常に有益です。これらの知識は、コンピュータサイエンスの分野に限らず、様々な場面で役立つでしょう。</p><p>これで、ソートに関する一連の学習は終了です。お疲れ様でした！</p></section>
+
+        <!-- 最後に -->
+        <section id="finally-author" class="content-page">
+            <h2>最後に</h2>
+            <p>このソートアルゴリズム学習コンテンツは、[あなたの名前または組織名] によって作成されました。</p>
+            <p>学習の一助となれば幸いです。</p>
+            <p><strong>連絡先 (任意):</strong></p>
+            <ul>
+                <li>Email: your-email@example.com</li>
+                <li>Website: your-website.com</li>
+            </ul>
+            <p><strong>謝辞 (任意):</strong></p>
+            <p>このコンテンツの作成にあたり、参考にさせていただいた資料や、ご協力いただいた方々がいれば記載します。</p>
+            <p><em>例: Prism.js の開発者コミュニティに感謝します。</em></p>
+            <hr>
+            <p style="font-size: 0.9em; color: #777;">最終更新日: 2023年MM月DD日 (適宜更新してください)</p>
+        </section>
+
+
+        <div class="navigation-buttons">
+            <button id="prevButton">前へ</button>
+            <button id="nextButton">次へ</button>
+        </div>
+    </main>
+
+    <!-- Prism.js の JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-plain.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tocLinks = document.querySelectorAll('.table-of-contents a');
+            const contentPages = document.querySelectorAll('.content-page');
+            const prevButton = document.getElementById('prevButton');
+            const nextButton = document.getElementById('nextButton');
+
+            let currentPageIndex = -1;
+
+            function initializePages() {
+                const hash = window.location.hash;
+                let initialPageId = '';
+
+                if (hash && document.querySelector(hash)) {
+                    initialPageId = hash;
+                } else if (contentPages.length > 0) {
+                    initialPageId = `#${contentPages[0].id}`;
+                }
+
+                if (initialPageId) {
+                     contentPages.forEach((page, index) => {
+                        if (`#${page.id}` === initialPageId) {
+                            currentPageIndex = index;
+                        }
+                    });
+                    if (window.location.hash !== initialPageId && initialPageId) {
+                         window.location.hash = initialPageId;
+                    } else {
+                        handleHashChange();
+                    }
+                } else if (contentPages.length > 0) {
+                    currentPageIndex = 0;
+                    window.location.hash = contentPages[0].id; // Fallback to first page if no valid hash
+                } else {
+                     handleHashChange(); 
+                }
+            }
+            
+            function handleHashChange() {
+                const currentHash = window.location.hash;
+                let found = false;
+                contentPages.forEach((page, index) => {
+                    if (`#${page.id}` === currentHash) {
+                        currentPageIndex = index;
+                        found = true;
+                    }
+                });
+                 if (!found && contentPages.length > 0) { // If hash is invalid, go to first page
+                    currentPageIndex = 0;
+                    if (window.location.hash !== `#${contentPages[0].id}`) { 
+                       window.location.hash = contentPages[0].id;
+                    } else { // If already at first page but hash was invalid, still need to update buttons
+                        updateActiveTocItem();
+                        updateNavButtons();
+                    }
+                } else if (!found && contentPages.length === 0) {
+                    currentPageIndex = -1; 
+                }
+                updateActiveTocItem();
+                updateNavButtons();
+            }
+
+
+            function updateActiveTocItem() {
+                const currentHash = window.location.hash;
+                tocLinks.forEach(link => {
+                    if (link.getAttribute('href') === currentHash) {
+                        link.classList.add('active-toc-item');
+                    } else {
+                        link.classList.remove('active-toc-item');
+                    }
+                });
+            }
+
+            function updateNavButtons() {
+                if (!prevButton || !nextButton || contentPages.length === 0) {
+                    if(prevButton) prevButton.disabled = true;
+                    if(nextButton) nextButton.disabled = true;
+                    return;
+                }
+                prevButton.disabled = (currentPageIndex <= 0);
+                nextButton.disabled = (currentPageIndex >= contentPages.length - 1);
+            }
+
+            function showPage(index) {
+                if (index >= 0 && index < contentPages.length) {
+                    const pageId = contentPages[index].id;
+                    if (window.location.hash !== `#${pageId}`) { 
+                        window.location.hash = pageId;
+                    }
+                }
+            }
+
+            window.addEventListener('hashchange', handleHashChange);
+
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    if (currentPageIndex > 0) {
+                        showPage(currentPageIndex - 1);
+                    }
+                });
+            }
+
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    if (currentPageIndex < contentPages.length - 1) {
+                        showPage(currentPageIndex + 1);
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', (event) => {
+                if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                    return;
+                }
+                if (event.key === 'ArrowLeft') {
+                    event.preventDefault(); 
+                    if (prevButton && !prevButton.disabled) { 
+                        showPage(currentPageIndex - 1);
+                    }
+                } else if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    if (nextButton && !nextButton.disabled) { 
+                        showPage(currentPageIndex + 1);
+                    }
+                }
+            });
+
+            initializePages();
+            Prism.highlightAll();
+        });
+    </script>
+
+</body>
+</html>
